@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -32,32 +32,48 @@
             align-items: center;
             font-size: 14px;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
         .cell.revealed {
-            background-color: #fff;
+            background-color: #e0e0e0;
             cursor: default;
         }
         .cell.flagged {
-            background-color: #f00;
+            background-color: #f44336;
             color: #fff;
+            cursor: default;
         }
         .cell.mine {
-            background-color: #000;
+            background-color: #f44336;
             color: #fff;
+            font-weight: bold;
         }
         .cell.zero {
-            color: #000;
+            color: #9e9e9e;
+            font-weight: normal;
+        }
+        .cell.revealed:not(.mine):not(.zero) {
+            font-weight: bold;
         }
         .game-over {
-            color: red;
+            color: #f44336;
             font-size: 20px;
             margin-top: 10px;
+            font-weight: bold;
         }
         button {
             margin-top: 20px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #43a047;
         }
     </style>
 </head>
@@ -141,8 +157,14 @@
             } else {
                 const surroundingMinesCount = getSurroundingMinesCount(index);
                 cell.classList.add('revealed');
-                cell.textContent = surroundingMinesCount > 0 ? surroundingMinesCount : '0';
-                cell.classList.add(surroundingMinesCount === 0 ? 'zero' : '');
+                
+                if (surroundingMinesCount === 0) {
+                    cell.textContent = '0';
+                    cell.classList.add('zero');
+                } else {
+                    cell.textContent = surroundingMinesCount;
+                }
+                
                 if (surroundingMinesCount === 0) {
                     revealSurroundingCells(index);
                 }
@@ -162,7 +184,7 @@
                     const newCol = col + j;
                     if (newRow >= 0 && newRow < boardSize && newCol >= 0 && newCol < boardSize) {
                         const newIndex = newRow * boardSize + newCol;
-                        if (!revealedCells.includes(newIndex)) {
+                        if (!revealedCells.includes(newIndex) && !flaggedCells.includes(newIndex)) {
                             const newCell = document.querySelector(`.cell[data-index="${newIndex}"]`);
                             revealCell({ target: newCell });
                         }
@@ -192,9 +214,18 @@
         }
 
         function checkWin() {
-            if (revealedCells.length + mineCount === boardSize * boardSize) {
+            const totalNonMineCells = boardSize * boardSize - mineCount;
+            if (revealedCells.length === totalNonMineCells) {
                 gameOverMessage.textContent = '你赢了！';
                 gameOver = true;
+                
+                mines.forEach(mineIndex => {
+                    if (!revealedCells.includes(mineIndex) && !flaggedCells.includes(mineIndex)) {
+                        const cell = document.querySelector(`.cell[data-index="${mineIndex}"]`);
+                        cell.classList.add('flagged');
+                        cell.textContent = '🚩';
+                    }
+                });
             }
         }
 
